@@ -1,0 +1,14 @@
+Description: Speech
+Engine: gotpl
+Home: http://kuberlab.com
+Icon: https://storage.googleapis.com/kuberlab-images/openslr.png
+Keywords:
+- tensorflow
+- kuberlab
+- speech
+Maintainers:
+- Email: agunin@kuberlab.com
+  Name: Gunin Alexander
+Name: speech
+Version: 1.0.0
+Type: mlapp-v2

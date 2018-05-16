@@ -1,0 +1,348 @@
+kind: MLApp
+metadata:
+  name: speech
+spec:
+  package_manager: "pip{{.python_version.value}}"
+  default_mount_path: "/notebooks"
+  packages:
+    - names:
+      {{- range $i, $value := .packages }}
+      - "{{ $value }}"
+      {{- end }}
+      manager: "pip{{.python_version.value}}"
+  tasks:
+  - name: standalone
+    resources:
+    - name: worker
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: python test.py --local --evaluator --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 8Gi
+      default_volume_mapping: true
+    - name: evaluator
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: python test.py --local --worker --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 8Gi
+      default_volume_mapping: true
+  - name: tf-sync
+    resources:
+    - name: worker
+      replicas: 2
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: "python test.py --worker --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --dataset_dir $DATA_DIR/LibriSpeech/dev-clean --test_dir $DATA_DIR/LibriSpeech/test-clean"
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      port: 2222
+      default_volume_mapping: true
+    - name: evaluator
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: "python test.py --evaluator --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --dataset_dir $DATA_DIR/LibriSpeech/dev-clean --test_dir $DATA_DIR/LibriSpeech/test-clean"
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      port: 2222
+      default_volume_mapping: true
+    - name: ps
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      is_permanent: true
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: "python test.py --ps --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --dataset_dir $DATA_DIR/LibriSpeech/dev-clean --test_dir $DATA_DIR/LibriSpeech/test-clean"
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+      port: 2222
+      default_volume_mapping: true
+  - name: horovod
+    resources:
+    - name: worker
+      replicas: 2
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: "board-mpi -p 2222"
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      port: 2222
+      default_volume_mapping: true
+    - name: evaluator
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: "python test.py --evaluator --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --dataset_dir $DATA_DIR/LibriSpeech/dev-clean --test_dir $DATA_DIR/LibriSpeech/test-clean"
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      port: 2222
+      default_volume_mapping: true
+    - name: ps
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      is_permanent: true
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: mpirun --tag-output --timestamp-output -mca orte_keep_fqdn_hostnames 1 -mca pml_obl_verbose 10 -mca plm_rsh_agent board-mpi -mca plm_rsh_args "-p 2222" -H $WORKER_HOSTS python test.py --horovod --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --dataset_dir $DATA_DIR/LibriSpeech/dev-clean --test_dir $DATA_DIR/LibriSpeech/test-clean
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+      port: 2222
+      default_volume_mapping: true
+ - name: dataset
+    resources:
+    - name: worker
+      replicas: 1
+      restartPolicy: Never
+      maxRestartCount: 0
+      {{- if eq .python_version.value "3" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      {{- if eq .python_version.value "2" }}
+      images:
+        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+      {{- end }}
+      command: ./prepare-data.sh
+      workdir: "$SRC_DIR"
+      resources:
+        accelerators:
+          gpu: 0
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 1000m
+          memory: 8Gi
+      volumes:
+      - name: src
+  uix:
+  {{- if .jupyter.value }}
+  - name: jupyter
+    displayName: Jupyter
+    {{- if eq .python_version.value "3" }}
+    images:
+      gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+      cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+    {{- end }}
+    {{- if eq .python_version.value "2" }}
+    images:
+      gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+      cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+    {{- end }}
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 1000m
+        memory: 4Gi
+    ports:
+    - port: 8888
+      targetPort: 8888
+      protocol: TCP
+      name: http
+    default_volume_mapping: true
+  {{- end }}
+  {{- if .tensorboard.value }}
+  - name: tensorboard
+    displayName: Tensorboard
+    command: "tensorboard --logdir=$TRAINING_DIR"
+    {{- if eq .python_version.value "3" }}
+    images:
+      gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-speech"
+      cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-speech"
+    {{- end }}
+    {{- if eq .python_version.value "2" }}
+    images:
+      gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
+      cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
+    {{- end }}
+    ports:
+    - port: 6006
+      targetPort: 6006
+      protocol: TCP
+      name: http
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    volumes:
+    - name: training
+  {{- end }}
+  volumes:
+  - isLibDir: false
+    name: training
+    clusterStorage: {{ .storage.value }}
+  - gitRepo:
+      repository: {{ gitRepo .src.value }}
+    isLibDir: false
+    name: src
+    subPath: {{ gitSubPath .src.value }}
+  - isLibDir: true
+    name: lib
+    clusterStorage: {{ .storage.value }}
+  - isLibDir: false
+    name: data
+    {{- if .dataset.value }}
+    datasetFS:
+      workspace: {{ .dataset.workspace }}
+      dataset: {{ .dataset.value }}
+      version: {{ .dataset.version }}
+    {{- else }}
+    clusterStorage: {{ .storage.value }}
+    {{- end }}
+  - isLibDir: false
+    mountPath: /notebooks
+    name: code
+    subPath: code
+    clusterStorage: {{ .storage.value }}
