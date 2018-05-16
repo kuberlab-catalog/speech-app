@@ -27,7 +27,7 @@ spec:
         gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
         cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
       {{- end }}
-      command: python test.py --local --evaluator --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
+      command: python test.py --local --worker --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
       workdir: "$SRC_DIR"
       resources:
         accelerators:
@@ -53,7 +53,7 @@ spec:
         gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
         cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
       {{- end }}
-      command: python test.py --local --worker --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
+      command: python test.py --local --evaluator --num_layers 1 --hidden_size 32 --batch_size 8 --learning_rate 0.1 --test_dir $DATA_DIR/LibriSpeech/test-clean --dataset_dir $DATA_DIR/LibriSpeech/dev-clean
       workdir: "$SRC_DIR"
       resources:
         accelerators:
@@ -249,7 +249,7 @@ spec:
         gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
         cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
       {{- end }}
-      command: "./prepare-data.sh"
+      command: "./prepare_data.sh"
       workdir: "$SRC_DIR"
       resources:
         accelerators:
