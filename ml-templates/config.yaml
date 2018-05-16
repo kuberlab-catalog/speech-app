@@ -249,7 +249,7 @@ spec:
         gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-speech"
         cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-speech"
       {{- end }}
-      command: ./prepare-data.sh
+      command: "./prepare-data.sh"
       workdir: "$SRC_DIR"
       resources:
         accelerators:
