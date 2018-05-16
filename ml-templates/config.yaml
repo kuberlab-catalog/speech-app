@@ -233,7 +233,7 @@ spec:
           memory: 2Gi
       port: 2222
       default_volume_mapping: true
- - name: dataset
+  - name: dataset
     resources:
     - name: worker
       replicas: 1
