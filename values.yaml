@@ -4,50 +4,9 @@ storage:
    name: "Storage Configuration"
    kind: cluster_storage
 
-tensorflow_version:
-  value: "1.7.0"
-  wizard:
-    name: "Tensorflow version"
-    kind: select
-    options:
-    - "1.2.0"
-    - "1.3.0"
-    - "1.4.0"
-    - "1.5.0"
-    - "1.6.0"
-    - "1.7.0"
-
-python_version:
-  value: "3"
-  wizard:
-    name: "Python version"
-    kind: select
-    options:
-    - "2"
-    - "3"
-
-jupyter:
-  value: true
-  wizard:
-    name: Install Jupyter
-    kind: boolean
-
-tensorboard:
-  value: true
-  wizard:
-    name: Install Tensorboard
-    kind: boolean
 
 src:
   value: https://github.com/kuberlab/speech2text
   wizard:
     name: "Source Code"
     kind: git
-
-dataset:
- value: 'librispeech-dev'
- version: '1.0.0'
- workspace: 'kuberlab-demo'
- wizard:
-   name: "Dataset configuration"
-   kind: dataset
